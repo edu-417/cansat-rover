@@ -4,6 +4,7 @@ from gpiozero import Motor
 
 from robot import Robot
 from encoder import QuadratureEncoder
+from gps import GPS
 from controller import PIDController
 from manager import RoverManager
 
@@ -22,7 +23,9 @@ def main():
     left_encoder = QuadratureEncoder(LEFT_ENCODER_INPUT['ticks_per_revolution'], LEFT_ENCODER_INPUT['hall_sensor_A'], LEFT_ENCODER_INPUT['hall_sensor_B'])
     right_encoder = QuadratureEncoder(RIGHT_ENCODER_INPUT['ticks_per_revolution'], RIGHT_ENCODER_INPUT['hall_sensor_A'], RIGHT_ENCODER_INPUT['hall_sensor_B'])
 
-    robot = Robot(left_motor, right_motor, left_encoder, right_encoder)
+    gps = GPS()
+
+    robot = Robot(left_motor, right_motor, left_encoder, right_encoder, gps)
     controller = PIDController(robot)
 
     target = {'x': 0 , 'y': 1}

@@ -1,7 +1,7 @@
 import math
 
 class Robot():
-    def __init__(self, left_motor, right_motor, left_encoder, right_encoder):
+    def __init__(self, left_motor, right_motor, left_encoder, right_encoder, gps):
         self.x = 0
         self.y = 0
         self.theta = 0
@@ -14,6 +14,7 @@ class Robot():
         self.right_motor = right_motor
         self.left_encoder = left_encoder
         self.right_encoder = right_encoder
+        self.gps = gps
 
     def forward(self, speed = 1):
         self.left_motor.forward(speed)
