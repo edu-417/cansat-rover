@@ -29,10 +29,15 @@ class GPS():
 
     def read(self):
         serial = Serial(self.port)
-        data = serial.readline()
-        sentence = data.decode('utf-8')
-        parsed_sentence = self.parse_nmea_sentence(sentence)
+        while True:
+            try:
+                data = serial.readline()
+                sentence = data.decode('utf-8')
+                parsed_sentence = self.parse_nmea_sentence(sentence)
 
+                if parsed_sentence['type'] == GGA_TYPE:
+                    break
+        
         serial.close()
 
         return SphericalPoint(parsed_sentence['latitude'], parsed_sentence['longitude'])
