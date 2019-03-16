@@ -33,7 +33,7 @@ def main():
     rover_manager = RoverManager(robot, controller, target)
 
     while(True):
-        rover_manager.execute()
+        rover_manager.execute_with_gps()
         print(robot.left_encoder.counter)
         print(robot.right_encoder.counter)
         sleep(dt)
