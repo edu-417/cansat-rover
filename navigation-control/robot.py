@@ -36,6 +36,10 @@ class Robot():
         else:
             self.right_motor.forward(right_speed)
 
+    def update_speed_normalize(self, left_speed, right_speed):
+        self.left_motor.forward(left_speed)
+        self.right_motor.forward(right_speed)
+
     def stop(self):
         self.left_motor.stop()
         self.right_motor.stop()
