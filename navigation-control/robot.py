@@ -15,6 +15,7 @@ class Robot():
         self.left_encoder = left_encoder
         self.right_encoder = right_encoder
         self.gps = gps
+        self.reference = self.gps.read()
 
     def forward(self, speed = 1):
         self.left_motor.forward(speed)
