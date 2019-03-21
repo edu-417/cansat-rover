@@ -35,10 +35,11 @@ class PIDController():
         return self.speed, w
 
 
-    def control(self, target):
+    def control(self, sphericalTarget):
+        target = sphericalTarget.toENU(self.robot.reference)
 
-        u_x = target['x'] - self.robot.x
-        u_y = target['y'] - self.robot.y
+        u_x = target[0] - self.robot.x
+        u_y = target[1] - self.robot.y
 
         print('ux: %f, uy: %f' %(u_x, u_y))
 

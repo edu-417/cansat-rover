@@ -21,7 +21,7 @@ class SphericalPoint():
 
         return theta
     
-    def toECEF(self, radius):
+    def toECEF(self, radius = 6378137):
         phi = degreesToRadians(self.latitude)
         _lambda = degreesToRadians(self.longitude)
 
@@ -31,7 +31,7 @@ class SphericalPoint():
 
         return np.array([x, y, z])
 
-    def toENU(self, referencePoint, radius):
+    def toENU(self, referencePoint, radius = 6378137):
         phi_r = degreesToRadians(referencePoint.latitude)
         lambda_r = degreesToRadians(referencePoint.longitude)
 
