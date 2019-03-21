@@ -16,7 +16,7 @@ class PIDController():
 
         target_theta = current_point.bearingTo(target)
 
-        u_theta = target_theta - self.robot.theta
+        u_theta = -target_theta - self.robot.theta
 
         print('g_theta: %f, u_theta: %f' %(target_theta, u_theta))
 
