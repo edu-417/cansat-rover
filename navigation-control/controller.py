@@ -44,7 +44,8 @@ class PIDController():
         print('ux: %f, uy: %f' %(u_x, u_y))
 
         target_theta = math.atan2(u_y, u_x)
-        current_heading = 90 - self.robot.magnetometer.read()
+        #current_heading = 90 - self.robot.magnetometer.read()
+        current_heading = self.robot.theta
 
         u_theta = target_theta - current_heading
 
