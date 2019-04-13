@@ -112,13 +112,11 @@ class RoverManager():
         print("vl: %f, vr: %f" %(left_speed, right_speed))
 
         self.robot.update_speed(left_vspeed, right_speed)
-        self.robot.speed = v
-        self.robot.w = w
 
         self.update_odometry()
 
 
-    def execute_with_filter(self):
+    def execute_with_filter(self, dt = 0.01, measurement = False):
         v, w = self.controller.control(self.target)
 
         max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
@@ -138,11 +136,21 @@ class RoverManager():
 
         time.sleep(dt)
 
+        #state = self.filter.predict(robot.get_state())
+        self.filter.predict(robot.get_state())
+        #robot.set_state(state)
 
-        state = self.filter.predict(robot.get_state())
-        robot.set_state(state)
+        if not measurement
+            return
 
-        state = self.filter.update(robot.get_state(), Z )
+        current_gps = self.robot.gps.read().toENU()
+        current_compass = self.robot.magnetometer.read()
+
+        measurements = np.array([
+            [current_gps[0], current_gps[1], current_compass]
+        ])
+
+        state = self.filter.update(robot.get_state(), measurements )
         robot.set_state(state)
 
 
