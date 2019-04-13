@@ -8,14 +8,13 @@ class RoverManager():
         self.previous_right_ticks = 0
         self.target = target
 
-    
     def distance_per_ticks(self, ticks, wheel_radius, ticks_per_revolution):
         return 2 * math.pi * wheel_radius / ticks_per_revolution * ticks
 
     def update_odometry(self):
 
-        left_encoder_ticks = self.robot.left_encoder.counter
-        right_encoder_ticks = -self.robot.right_encoder.counter
+        left_encoder_ticks = -self.robot.left_encoder.counter
+        right_encoder_ticks = self.robot.right_encoder.counter
         left_wheel_distance = self.distance_per_ticks(left_encoder_ticks - self.previous_left_ticks, self.robot.wheel_radius, self.robot.left_encoder.ticks_per_revolution)
         right_wheel_distance = self.distance_per_ticks(right_encoder_ticks - self.previous_right_ticks, self.robot.wheel_radius, self.robot.right_encoder.ticks_per_revolution)
 
@@ -29,6 +28,7 @@ class RoverManager():
         self.robot.x += dx
         self.robot.y += dy
         self.robot.theta += dtheta
+        self.robot.theta = math.atan2(math.sin(self.robot.theta), math.cos(self.robot.theta))
 
         self.previous_left_ticks = left_encoder_ticks
         self.previous_right_ticks = right_encoder_ticks
