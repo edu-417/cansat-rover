@@ -1,10 +1,14 @@
 import math
 
+import numpy as np
+
 class Robot():
     def __init__(self, left_motor, right_motor, left_encoder, right_encoder, gps, magnetometer):
         self.x = 0
         self.y = 0
         self.theta = 0
+        self.speed = 0
+        self.w = 0
         self.wheel_radius = 0.139
         self.wheel_base_length = 0.212
         self.max_left_wheel_speed = 7.48
@@ -45,3 +49,21 @@ class Robot():
     def stop(self):
         self.left_motor.stop()
         self.right_motor.stop()
+    
+    def get_state(self):
+        state = np.array([
+            [self.x],
+            [self.y],
+            [self.theta],
+            [self.speed],
+            [self.w]
+        ])
+
+        return state
+
+    def set_state(self, state):
+        self.x = state[0, 0]
+        self.y = state[1, 0]
+        self.theta = state[2, 0]
+        self.speed = state[3,0]
+        self.w = state[4,0]
