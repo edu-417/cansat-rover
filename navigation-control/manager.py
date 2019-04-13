@@ -1,4 +1,5 @@
 import math
+from filter import KalmanFilter
 
 class RoverManager():
     def __init__(self, robot, controller, target):
@@ -7,6 +8,7 @@ class RoverManager():
         self.previous_left_ticks = 0
         self.previous_right_ticks = 0
         self.target = target
+        self.filter = KalmanFilter()
 
     def distance_per_ticks(self, ticks, wheel_radius, ticks_per_revolution):
         return 2 * math.pi * wheel_radius / ticks_per_revolution * ticks
@@ -75,19 +77,7 @@ class RoverManager():
 
         self.update_odometry()
 
-
-    def execute(self):
-        v, w = self.controller.control(self.target)
-
-        max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
-        w = max(min(w, max_w), -max_w)
-
-        print("w: %f", w)
-
-        left_speed, right_speed = self.unicycle_to_differential(v, w)
-
-        print("vl: %f, vr: %f" %(left_speed, right_speed))
-
+    def ensure_wheel_speeds(self, left_speed, right_speed, w):
         if( max(left_speed, right_speed) > self.robot.max_speed ):
             if left_speed > right_speed:
                 left_speed = self.robot.max_speed
@@ -104,9 +94,64 @@ class RoverManager():
                 right_speed = -self.robot.max_speed
                 left_speed = right_speed - w * self.robot.wheel_base_length / self.robot.wheel_radius
 
+        return left_speed, right_speed
+
+    def execute(self):
+        v, w = self.controller.control(self.target)
+
+        max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
+        w = max(min(w, max_w), -max_w)
+
+        print("w: %f", w)
+
+        left_speed, right_speed = self.unicycle_to_differential(v, w)
+
+        print("vl: %f, vr: %f" %(left_speed, right_speed))
+
+        left_speed, right_speed = self.ensure_wheel_speeds(left_speed, right_speed, w)
+
+        print("vl: %f, vr: %f" %(left_speed, right_speed))
+
+        self.robot.update_speed(left_vspeed, right_speed)
+
+        self.update_odometry()
+
+
+    def execute_with_filter(self, dt = 0.01, measurement = False):
+        v, w = self.controller.control(self.target)
+
+        max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
+        w = max(min(w, max_w), -max_w)
+
+        print("w: %f", w)
+
+        left_speed, right_speed = self.unicycle_to_differential(v, w)
+
+        print("vl: %f, vr: %f" %(left_speed, right_speed))
+
+        left_speed, right_speed = self.ensure_wheel_speeds(left_speed, right_speed, w)
 
         print("vl: %f, vr: %f" %(left_speed, right_speed))
 
         self.robot.update_speed(left_speed, right_speed)
 
-        self.update_odometry()
+        time.sleep(dt)
+
+        #state = self.filter.predict(robot.get_state())
+        self.filter.predict(robot.get_state())
+        #robot.set_state(state)
+
+        if not measurement
+            return
+
+        current_gps = self.robot.gps.read().toENU()
+        current_compass = self.robot.magnetometer.read()
+
+        measurements = np.array([
+            [current_gps[0], current_gps[1], current_compass]
+        ])
+
+        state = self.filter.update(robot.get_state(), measurements )
+        robot.set_state(state)
+
+
