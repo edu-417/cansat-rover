@@ -4,7 +4,7 @@ class PIDController():
     def __init__(self, robot):
         self.robot = robot
         self.speed = 0.556
-        self.kp = 2
+        self.kp = 5
         self.ki = 0
         self.kd = 0
         self.previous_error = 0
@@ -44,8 +44,9 @@ class PIDController():
         print('ux: %f, uy: %f' %(u_x, u_y))
 
         target_theta = math.atan2(u_y, u_x)
+        current_heading = 90 - self.robot.magnetometer.read()
 
-        u_theta = target_theta - self.robot.theta
+        u_theta = target_theta - current_heading
 
         print('g_theta: %f, u_theta: %f' %(target_theta, u_theta))
 
