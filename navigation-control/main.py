@@ -36,19 +36,20 @@ def main():
     target = SphericalPoint(-12.016592, -77.049883 )
 
     rover_manager = RoverManager(robot, controller, target)
-#    robot.right_motor.forward(0.3)
-#    rover_image_manager = ImageProcessing(robot)
 
+    print(target.toENU(robot.reference))
+
+#    rover_image_manager = ImageProcessing(robot)
 #    rover_image_manager.execute()
 
-#    robot.right_motor.forward()
     epoch = 0
     while(True):
-        measurement = (epoch > 0 and (epoch % 100 == 0))
-        print(measurement)
-        rover_manager.execute_with_filter(measurement = measurement)
-        print(robot.left_encoder.counter)
-        print(robot.right_encoder.counter)
+        gps_enabled = (epoch > 0 and (epoch % 100 == 0))
+        print("epoch: %d" %epoch)
+        print("gps: ", gps_enabled)
+        rover_manager.execute_with_filter(gps_enabled = gps_enabled)
+#        print(robot.left_encoder.counter)
+#        print(robot.right_encoder.counter)
         epoch += 1
 
 if __name__ == '__main__':
