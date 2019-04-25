@@ -54,14 +54,16 @@ class KalmanFilter():
     def update(self, x, z, only_compass = False):
 
         H = self.H
+        R = self.R
 
         if only_compass:
             H = self.H_compass
+            R = self.R_compass
 
         I = np.identity(5)
 
         y = z - H @ x
-        S = H @ self.P @ H.transpose() + self.R
+        S = H @ self.P @ H.transpose() + R
         K = self.P @ H.transpose() @ np.linalg.inv(S)
 
         x = x + K @ y
