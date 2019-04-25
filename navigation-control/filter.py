@@ -39,17 +39,17 @@ class KalmanFilter():
             [0, 0,                           0,                  0, 1]
         ])
         #x = f(x, u)
-        self.P = F @ self.P @ F.transponse() + self.Q
+        self.P = F @ self.P @ F.transpose() + self.Q
 
         return x
 
-    def update(self, z):
+    def update(self, x, z):
 
         I = np.identity(5)
 
         y = z - self.H @ x
-        S = self.H @ self.P @ self.H.transponse() + self.R
-        K = self.P @ self.H.transponse() * np.linalg.inverse(self.S)
+        S = self.H @ self.P @ self.H.transpose() + self.R
+        K = self.P @ self.H.transpose() @ np.linalg.inv(S)
 
         x = x + K @ y
         self.P = (I - K @ self.H) @ self.P
