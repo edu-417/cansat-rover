@@ -5,15 +5,19 @@ from gpiozero import Motor
 from robot import Robot
 from encoder import QuadratureEncoder
 from gps import GPS
+from magnetometer import Magnetometer
 from controller import PIDController
 from manager import RoverManager
+#from imageProcessing import ImageProcessing
+
+from sphericalTrigonometry import SphericalPoint
 
 def main():
-    dt = 0.1
+    dt = 0.01
 
     LEFT_MOTOR_INPUT = (17, 27)
     RIGHT_MOTOR_INPUT = (5, 6)
-     
+
     LEFT_ENCODER_INPUT = {'hall_sensor_A': 23, 'hall_sensor_B': 24, 'ticks_per_revolution': 2400}
     RIGHT_ENCODER_INPUT = {'hall_sensor_A': 13, 'hall_sensor_B': 19, 'ticks_per_revolution': 2350}
 
@@ -24,19 +28,28 @@ def main():
     right_encoder = QuadratureEncoder(RIGHT_ENCODER_INPUT['ticks_per_revolution'], RIGHT_ENCODER_INPUT['hall_sensor_A'], RIGHT_ENCODER_INPUT['hall_sensor_B'])
 
     gps = GPS()
+    magnetometer = Magnetometer()
 
-    robot = Robot(left_motor, right_motor, left_encoder, right_encoder, gps)
+    robot = Robot(left_motor, right_motor, left_encoder, right_encoder, gps, magnetometer)
     controller = PIDController(robot)
 
-    target = {'x': 0 , 'y': 1}
+    target = SphericalPoint(-12.016592, -77.049883 )
 
     rover_manager = RoverManager(robot, controller, target)
+#    robot.right_motor.forward(0.3)
+#    rover_image_manager = ImageProcessing(robot)
 
+#    rover_image_manager.execute()
+
+#    robot.right_motor.forward()
+    epoch = 0
     while(True):
-        rover_manager.execute_with_gps()
+        measurement = (epoch > 0 and (epoch % 100 == 0))
+        print(measurement)
+        rover_manager.execute_with_filter(measurement = measurement)
         print(robot.left_encoder.counter)
         print(robot.right_encoder.counter)
-        sleep(dt)
+        epoch += 1
 
 if __name__ == '__main__':
     main()
