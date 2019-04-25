@@ -1,4 +1,6 @@
 import math
+import time
+import numpy as np
 from filter import KalmanFilter
 
 class RoverManager():
@@ -8,7 +10,7 @@ class RoverManager():
         self.previous_left_ticks = 0
         self.previous_right_ticks = 0
         self.target = target
-        self.filter = KalmanFilter()
+        self.filter = KalmanFilter(self.robot)
 
     def distance_per_ticks(self, ticks, wheel_radius, ticks_per_revolution):
         return 2 * math.pi * wheel_radius / ticks_per_revolution * ticks
@@ -137,21 +139,23 @@ class RoverManager():
 
         time.sleep(dt)
 
+        self.update_odometry()
         #state = self.filter.predict(robot.get_state())
-        self.filter.predict(robot.get_state())
+        self.filter.predict(self.robot.get_state())
+        print(self.robot.get_state())
         #robot.set_state(state)
 
-        if not measurement
+        if not measurement:
             return
 
-        current_gps = self.robot.gps.read().toENU()
-        current_compass = self.robot.magnetometer.read()
+        current_gps = self.robot.gps.read().toENU(self.robot.reference)
+        current_compass = 90 - self.robot.magnetometer.read()
 
         measurements = np.array([
             [current_gps[0], current_gps[1], current_compass]
         ])
 
-        state = self.filter.update(robot.get_state(), measurements )
-        robot.set_state(state)
+        state = self.filter.update(self.robot.get_state(), measurements )
+        self.robot.set_state(state)
 
 
