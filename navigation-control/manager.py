@@ -145,7 +145,7 @@ class RoverManager():
         print(self.robot.get_state())
         #robot.set_state(state)
 
-        current_compass = 90 - self.robot.magnetometer.read()
+        current_compass = math.pi / 2 - self.robot.magnetometer.read()
 
         measurements = np.array([
             [current_compass]
@@ -159,7 +159,7 @@ class RoverManager():
                 [current_gps[0], current_gps[1], current_compass]
             ])
 
-        state = self.filter.update(self.robot.get_state(), measurements )
+        state = self.filter.update(self.robot.get_state(), measurements, only_compass = (not gps_enabled) )
         self.robot.set_state(state)
 
 
