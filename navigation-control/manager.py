@@ -119,7 +119,7 @@ class RoverManager():
         self.update_odometry()
 
 
-    def execute_with_filter(self, dt = 0.01, measurement = False):
+    def execute_with_filter(self, dt = 0.01, gps_enabled = False):
         v, w = self.controller.control(self.target)
 
         max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
@@ -145,15 +145,19 @@ class RoverManager():
         print(self.robot.get_state())
         #robot.set_state(state)
 
-        if not measurement:
-            return
-
-        current_gps = self.robot.gps.read().toENU(self.robot.reference)
         current_compass = 90 - self.robot.magnetometer.read()
 
         measurements = np.array([
-            [current_gps[0], current_gps[1], current_compass]
+            [current_compass]
         ])
+
+        if gps_enabled:
+
+            current_gps = self.robot.gps.read().toENU(self.robot.reference)
+
+            measurements = np.array([
+                [current_gps[0], current_gps[1], current_compass]
+            ])
 
         state = self.filter.update(self.robot.get_state(), measurements )
         self.robot.set_state(state)

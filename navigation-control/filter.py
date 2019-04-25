@@ -10,6 +10,10 @@ class KalmanFilter():
             [0, 0, 1, 0, 0]
         ])
 
+        self.H_compass = np.array([
+            [0, 0, 1, 0, 0]
+        ])
+
         self.P = np.array([
             [1000, 0, 0, 0, 0],
             [0, 1000, 0, 0, 0],
@@ -23,6 +27,10 @@ class KalmanFilter():
         self.R = np.array([
             [100, 0, 0],
             [0, 100, 0],
+            [0, 0, 25]
+        ])
+
+        self.R_compass = np.array([
             [0, 0, 25]
         ])
 
@@ -43,16 +51,21 @@ class KalmanFilter():
 
         return x
 
-    def update(self, x, z):
+    def update(self, x, z, only_compass = False):
+
+        H = self.H
+
+        if only_compass:
+            H = self.H_compass
 
         I = np.identity(5)
 
-        y = z - self.H @ x
-        S = self.H @ self.P @ self.H.transpose() + self.R
-        K = self.P @ self.H.transpose() @ np.linalg.inv(S)
+        y = z - H @ x
+        S = H @ self.P @ H.transpose() + self.R
+        K = self.P @ H.transpose() @ np.linalg.inv(S)
 
         x = x + K @ y
-        self.P = (I - K @ self.H) @ self.P
+        self.P = (I - K @ H) @ self.P
 
         return x
 
