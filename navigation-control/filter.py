@@ -31,7 +31,7 @@ class KalmanFilter():
         ])
 
         self.R_compass = np.array([
-            [0, 0, 25]
+            [25]
         ])
 
     def predict(self, x, dt = 0.01):
