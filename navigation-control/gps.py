@@ -1,11 +1,11 @@
-from serial import serial
+from serial import Serial
 
 from sphericalTrigonometry import SphericalPoint
 
 class GPS():
     GGA_TYPE = 'GGA'
 
-    def __init__(self, port = "/dev/ttyAMA0"):
+    def __init__(self, port = "/dev/ttyS0"):
         self.port = port
 
     def parse_nmea_sentence(self, sentence):
@@ -33,11 +33,14 @@ class GPS():
             try:
                 data = serial.readline()
                 sentence = data.decode('utf-8')
+                print(sentence)
                 parsed_sentence = self.parse_nmea_sentence(sentence)
 
-                if parsed_sentence['type'] == GGA_TYPE:
+                if parsed_sentence['type'] == self.GGA_TYPE:
                     break
-        
+            except:
+                 print("loading")
+
         serial.close()
 
         return SphericalPoint(parsed_sentence['latitude'], parsed_sentence['longitude'])
