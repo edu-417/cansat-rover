@@ -35,6 +35,11 @@ def main():
 
     target = SphericalPoint(-12.016592, -77.049883 )
 
+#    target = SphericalPoint(-12.016679333333334,-77.05032666666666)
+#    target = SphericalPoint(-12.016824833333333,-77.04993633333333)
+#    target = SphericalPoint(-12.016822250210852, -77.04970762346649
+
+
     rover_manager = RoverManager(robot, controller, target)
 
     print(target.toENU(robot.reference))
@@ -44,12 +49,9 @@ def main():
 
     epoch = 0
     while(True):
-        gps_enabled = (epoch > 0 and (epoch % 100 == 0))
         print("epoch: %d" %epoch)
-        print("gps: ", gps_enabled)
+        gps_enabled = (epoch > 0 and (epoch % 100 == 0))
         rover_manager.execute_with_filter(gps_enabled = gps_enabled)
-#        print(robot.left_encoder.counter)
-#        print(robot.right_encoder.counter)
         epoch += 1
 
 if __name__ == '__main__':

@@ -15,10 +15,14 @@ class RoverManager():
     def distance_per_ticks(self, ticks, wheel_radius, ticks_per_revolution):
         return 2 * math.pi * wheel_radius / ticks_per_revolution * ticks
 
-    def update_odometry(self):
+    def update_odometry(self, dt = 0.01):
 
         left_encoder_ticks = -self.robot.left_encoder.counter
         right_encoder_ticks = self.robot.right_encoder.counter
+
+        print("left encoder: ", left_encoder_ticks)
+        print("right encoder: ", right_encoder_ticks)
+
         left_wheel_distance = self.distance_per_ticks(left_encoder_ticks - self.previous_left_ticks, self.robot.wheel_radius, self.robot.left_encoder.ticks_per_revolution)
         right_wheel_distance = self.distance_per_ticks(right_encoder_ticks - self.previous_right_ticks, self.robot.wheel_radius, self.robot.right_encoder.ticks_per_revolution)
 
@@ -33,6 +37,7 @@ class RoverManager():
         self.robot.y += dy
         self.robot.theta += dtheta
         self.robot.theta = math.atan2(math.sin(self.robot.theta), math.cos(self.robot.theta))
+        self.speed = distance / dt
 
         self.previous_left_ticks = left_encoder_ticks
         self.previous_right_ticks = right_encoder_ticks
@@ -50,7 +55,7 @@ class RoverManager():
         max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
         w = max(min(w, max_w), -max_w)
 
-        print("w: %f", w)
+        print("w: %f" %w)
 
         left_speed, right_speed = self.unicycle_to_differential(v, w)
 
@@ -104,7 +109,7 @@ class RoverManager():
         max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
         w = max(min(w, max_w), -max_w)
 
-        print("w: %f", w)
+        print("w: %f" %w)
 
         left_speed, right_speed = self.unicycle_to_differential(v, w)
 
@@ -125,11 +130,9 @@ class RoverManager():
         max_w = 2 * self.robot.wheel_radius * min(self.robot.max_left_wheel_speed, self.robot.max_right_wheel_speed) / self.robot.wheel_base_length
         w = max(min(w, max_w), -max_w)
 
-        print("w: %f", w)
+        print("w: %f" %w)
 
         left_speed, right_speed = self.unicycle_to_differential(v, w)
-
-        print("vl: %f, vr: %f" %(left_speed, right_speed))
 
         left_speed, right_speed = self.ensure_wheel_speeds(left_speed, right_speed, w)
 
@@ -140,10 +143,10 @@ class RoverManager():
         time.sleep(dt)
 
         self.update_odometry()
-        #state = self.filter.predict(robot.get_state())
+
+        print("predict state: ", self.robot.get_state())
+
         self.filter.predict(self.robot.get_state())
-        print(self.robot.get_state())
-        #robot.set_state(state)
 
         current_compass = math.pi / 2 - self.robot.magnetometer.read()
 
@@ -159,7 +162,11 @@ class RoverManager():
                 [current_gps[0], current_gps[1], current_compass]
             ])
 
+        print("measurements: ", measurements)
+
         state = self.filter.update(self.robot.get_state(), measurements, only_compass = (not gps_enabled) )
         self.robot.set_state(state)
+
+        print("update state: ", state)
 
 
