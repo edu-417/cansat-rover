@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class KalmanFilter():
     def __init__(self, robot):
@@ -59,6 +60,11 @@ class KalmanFilter():
         if only_compass:
             H = self.H_compass
             R = self.R_compass
+
+            if x[2, 0] < -math.pi / 2 and z[0, 0] > math.pi / 2:
+                x[2, 0] += 2 * math.pi
+            elif x[2, 0] > math.pi / 2 and z[0, 0] < math.pi / 2:
+                 z[0, 0] += 2 * math.pi
 
         I = np.identity(5)
 
