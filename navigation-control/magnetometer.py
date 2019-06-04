@@ -12,3 +12,8 @@ class Magnetometer:
         print(bearing_degrees)
 
         return math.radians(bearing_degrees)
+
+
+if __name__ == '__main__':
+    magnetometer = Magnetometer()
+    print(magnetometer.read())
