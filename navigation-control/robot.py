@@ -11,9 +11,9 @@ class Robot():
         self.w = 0
         self.wheel_radius = 0.139
         self.wheel_base_length = 0.212
-        self.max_left_wheel_speed = 7.48
-        self.max_right_wheel_speed = 7.67
-        self.max_speed = 7.48
+        self.max_left_wheel_speed = 10.472
+        self.max_right_wheel_speed = 10.472
+        self.max_speed = 10.472
         self.left_motor = left_motor
         self.right_motor = right_motor
         self.left_encoder = left_encoder
@@ -21,6 +21,8 @@ class Robot():
         self.gps = gps
         self.magnetometer = magnetometer
         self.reference = self.gps.read()
+        self.theta = math.pi / 2 - magnetometer.read()
+        self.theta = math.atan2( math.sin(self.theta), math.cos(self.theta) )
 
     def forward(self, speed = 1):
         self.left_motor.forward(speed)
@@ -49,7 +51,7 @@ class Robot():
     def stop(self):
         self.left_motor.stop()
         self.right_motor.stop()
-    
+
     def get_state(self):
         state = np.array([
             [self.x],
@@ -64,6 +66,6 @@ class Robot():
     def set_state(self, state):
         self.x = state[0, 0]
         self.y = state[1, 0]
-        self.theta = state[2, 0]
+        self.theta = math.atan2( math.sin(state[2, 0]), math.cos(state[2, 0]) )
         self.speed = state[3,0]
         self.w = state[4,0]

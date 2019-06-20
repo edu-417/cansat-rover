@@ -37,7 +37,7 @@ class RoverManager():
         self.robot.y += dy
         self.robot.theta += dtheta
         self.robot.theta = math.atan2(math.sin(self.robot.theta), math.cos(self.robot.theta))
-        self.speed = distance / dt
+        self.robot.speed = abs(distance) / dt
 
         self.previous_left_ticks = left_encoder_ticks
         self.previous_right_ticks = right_encoder_ticks
@@ -134,6 +134,8 @@ class RoverManager():
 
         left_speed, right_speed = self.unicycle_to_differential(v, w)
 
+        print("vl: %f, vr: %f" %(left_speed, right_speed))
+
         left_speed, right_speed = self.ensure_wheel_speeds(left_speed, right_speed, w)
 
         print("vl: %f, vr: %f" %(left_speed, right_speed))
@@ -149,6 +151,7 @@ class RoverManager():
         self.filter.predict(self.robot.get_state())
 
         current_compass = math.pi / 2 - self.robot.magnetometer.read()
+        current_compass = math.atan2( math.sin(current_compass), math.cos(current_compass) )
 
         measurements = np.array([
             [current_compass]
@@ -168,5 +171,3 @@ class RoverManager():
         self.robot.set_state(state)
 
         print("update state: ", state)
-
-
