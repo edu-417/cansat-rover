@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <style>
+      .map {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <title>GPS Tracker</title>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <button id="start-animation">Start Animation</button>
+    <label for="speed">
+      speed:&nbsp;
+      <input id="speed" type="range" min="1" max="10" step="1" value="2">
+    </label>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        var center = ol.proj.fromLonLat([-77.052, -12.016]);
+        var map = new ol.Map({
+            target: 'map',
+            loadTilesWhileAnimating: true,
+            layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+            ],
+            view: new ol.View({
+            center: center,
+            zoom: 17
+            })
+        });
+        var animating = false;
+        var speed, now;
+        var speedInput = document.getElementById('speed');
+        var startButton = document.getElementById('start-animation');
+      
+        var locations = [
+            [-12,014864, -77,050437],
+            [-12,014887, -77,050654],
+            [-12,014955, -77,051064],
+            [-12,015000, -77,051394],
+            [-12,015031, -77,051636],
+            [-12,015060, -77,051853],
+            [-12,015073, -77,052014],
+            [-12,015099, -77,052223],
+            [-12,015372, -77,052161],
+            [-12,015590, -77,052108],
+            [-12,015745, -77,052071],
+            [-12,016012, -77,052006],
+            [-12,016183, -77,051961],
+            [-12,016345, -77,051931],
+            [-12,016479, -77,051891]
+        ];
+
+        // OpenLayers uses [lon, lat], not [lat, lon]
+        locations.map(function(l) {
+          return l.reverse();
+        });
+        
+        var route = new ol.geom.LineString(locations)
+            .transform('EPSG:4326', 'EPSG:3857');
+        
+        var routeCoords = route.getCoordinates();
+        var routeLength = routeCoords.length;
+        console.log(routeLength)
+        
+        var routeFeature = new ol.Feature({
+          type: 'route',
+          geometry: route
+        });
+        var geoMarker = new ol.Feature({
+          type: 'geoMarker',
+          geometry: new ol.geom.Point(routeCoords[0])
+        });
+        var startMarker = new ol.Feature({
+          type: 'icon',
+          geometry: new ol.geom.Point(routeCoords[0])
+        });
+        var endMarker = new ol.Feature({
+          type: 'icon',
+          geometry: new ol.geom.Point(routeCoords[routeLength - 1])
+        });
+        
+        var styles = {
+          'route': new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              width: 6,
+              color: [237, 212, 0, 0.8]
+            })
+          }),
+          'icon': new ol.style.Style({
+            image: new ol.style.Icon({
+              anchor: [0.5, 1],
+              src: 'https://openlayers.org/en/v3.20.1/examples/data/icon.png'
+            })
+          }),
+          'geoMarker': new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: 7,
+              snapToPixel: false,
+              fill: new ol.style.Fill({
+                color: 'black'
+              }),
+              stroke: new ol.style.Stroke({
+                color: 'white',
+                width: 2
+              })
+            })
+          })
+        };
+        
+      
+      //Adding a marker on the map
+        var marker = new ol.Feature({
+            geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([-77.05, -12.01639])
+                //ol.proj.fromLonLat([msg.payload.longitude, msg.payload.latitude])
+            ),  // Cordinates of New York's Town Hall
+        });
+        var vectorSource = new ol.source.Vector({
+          features: [marker]
+        });
+        var markerVectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            // style: function(feature) {
+            //     // hide geoMarker if animation is active
+            //     if (animating && feature.get('type') === 'geoMarker') {
+            //       return null;
+            //     }
+            //     return styles[feature.get('type')];
+            //   }
+            style: new ol.style.Style({
+              fill: new ol.style.Fill({
+                color: '#ffcc33'
+              }),
+              stroke: new ol.style.Stroke({
+                color: '#ffcc33',
+                width: 2
+              }),
+              image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({
+                  color: '#ff0000'
+                })
+              })
+            })
+          });
+          
+        
+        map.addLayer(markerVectorLayer);
+        //map.addLayer(vectorSource);
+        function receiveMessage(event)
+        {
+          // Do we trust the sender of this message?  (might be
+          // different from what we originally opened, for example).
+          
+          console.log(event);
+        
+          // event.source is popup
+          // event.data is "hi there yourself!  the secret response is: rheeeeet!"
+        }
+        window.addEventListener("message", receiveMessage, false);
+      
+        var moveFeature = function(event) {
+            var vectorContext = event.vectorContext;
+            var frameState = event.frameState;
+
+            if (animating) {
+                var elapsedTime = frameState.time - now;
+                // here the trick to increase speed is to jump some indexes
+                // on lineString coordinates
+                var index = Math.round(speed * elapsedTime / 1000);
+
+                if (index >= routeLength) {
+                stopAnimation(true);
+                return;
+                }
+
+                var currentPoint = new ol.geom.Point(routeCoords[index]);
+                var feature = new ol.Feature(currentPoint);
+                vectorContext.drawFeature(feature, styles.geoMarker);
+            }
+            // tell OL3 to continue the postcompose animation
+            map.render();
+        };
+
+        function startAnimation() {
+        if (animating) {
+            stopAnimation(false);
+        } else {
+            animating = true;
+            now = new Date().getTime();
+            speed = speedInput.value;
+            startButton.textContent = 'Cancel Animation';
+            // hide geoMarker
+            geoMarker.setStyle(null);
+            // just in case you pan somewhere else
+            //map.getView().setCenter(center);
+            map.on('postcompose', moveFeature);
+            map.render();
+        }
+        }
+
+
+        /**
+         * @param {boolean} ended end of animation.
+         */
+        function stopAnimation(ended) {
+        animating = false;
+        startButton.textContent = 'Start Animation';
+
+        // if animation cancelled set the marker at the beginning
+        var coord = ended ? routeCoords[routeLength - 1] : routeCoords[0];
+        /** @type {ol.geom.Point} */
+        (geoMarker.getGeometry())
+        .setCoordinates(coord);
+        //remove listener
+        map.un('postcompose', moveFeature);
+        }
+
+      startButton.addEventListener('click', startAnimation, false);
+    });
+    </script>
+  </body>
+</html>
