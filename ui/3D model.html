@@ -1,0 +1,87 @@
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.js"></script>
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<script>
+		$(document).ready(function(){
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(0x808080);
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+		    var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+            scene.add( light );
+			
+            var loader = new THREE.GLTFLoader();
+            var rover;
+            var quaternion = new THREE.Quaternion();
+            
+            loader.load( 'rover/scene.gltf', function ( gltf ) {
+                rover = gltf.scene
+                //rover.rotation.x = 90;
+            	scene.add( rover );
+            	console.log('loaded model')
+            
+            }, undefined, function ( error ) {
+            
+            	console.error( error );
+            
+            } );
+
+			//var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			//var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			//var cube = new THREE.Mesh( geometry, material );
+			//scene.add( cube );
+
+			//camera.position.z = 500;
+			camera.position.z = 200;
+			camera.position.y = 0;
+
+			var animate = function () {
+				requestAnimationFrame( animate );
+
+				if(rover){
+				    console.log(rover.position)
+				    console.log(rover.quaternion)
+				    rover.matrix.makeRotationFromQuaternion( quaternion );
+                    rover.matrixAutoUpdate = false;
+				//     rover.rotation.y += 0.01;
+				}
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+			
+			function receiveMessage(event)
+        {
+          // Do we trust the sender of this message?  (might be
+          // different from what we originally opened, for example).
+          
+          console.log(event);
+          
+          data = event.data.split(',');
+          w = data[0];
+          x = data[1];
+          y = data[2];
+          z = data[3];
+          quaternion.copy(new THREE.Quaternion(x, z, y, w).normalize())
+          // event.source is popup
+          // event.data is "hi there yourself!  the secret response is: rheeeeet!"
+        }
+        
+        window.addEventListener("message", receiveMessage, false);
+        });
+		</script>
+	</body>
+</html>
