@@ -1,4 +1,6 @@
-const long delayInterval = 50;
+#include <LORA.h>
+
+const long delayInterval = 150;
 unsigned long previousMillis = 0;
 /*
   Get basic environmental readings from the BME280
@@ -21,9 +23,11 @@ unsigned long previousMillis = 0;
   SCL -> A5
 */
 
-#include <Wire.h>
-  
 #include <SparkFunBME280.h>
+#include <Wire.h>
+
+LORA lora;
+  
 BME280 mySensor;
 
 int UVOUT = A0; //Output from the sensor
@@ -285,7 +289,7 @@ void mpu6050Loop() {
     if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
         // reset so we can continue cleanly
         mpu.resetFIFO();
-        Serial.println(F("FIFO overflow!"));
+//        Serial.println(F("FIFO overflow!"));
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } else if (mpuIntStatus & 0x02) {
@@ -303,16 +307,13 @@ void mpu6050Loop() {
             // display quaternion values in easy matrix form: w x y z
             mpu.dmpGetQuaternion(&q, fifoBuffer);
 //            Serial.print("quat\t");
-            Serial.print(q.w);
+//            Serial.print(q.w);
 //            Serial.print("\t");
-            Serial.print(",");
-            Serial.print(q.x);
+//            Serial.print(q.x);
 //            Serial.print("\t");
-            Serial.print(",");
-            Serial.print(q.y);
+//            Serial.print(q.y);
 //            Serial.print("\t");
-            Serial.print(",");
-            Serial.println(q.z);
+//            Serial.println(q.z);
         #endif
 
         #ifdef OUTPUT_READABLE_EULER
@@ -392,17 +393,18 @@ void mpu6050Loop() {
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Wire.begin();
 
   Serial.println(F("\nSend any character to begin: "));
   while (Serial.available() && Serial.read()); // empty buffer
   while (!Serial.available());                 // wait for data
   while (Serial.available() && Serial.read()); // empty buffer again
-  
+
+  loraSetup();
   mpu6050Setup();
-  //bme280Setup();
-  //ml8511Setup(); 
+  bme280Setup();
+  ml8511Setup(); 
 }
 
 void bme280Setup()
@@ -430,34 +432,54 @@ void ml8511Setup()
   //Serial.println("ML8511 example");
 }
 
+void loraSetup()
+{
+  if( !lora.init()){
+    Serial.println("Lora Init fail!");
+    while(true);
+  }
+}
+
 float humidity, pressure, altitude, temperature, uvIntensity;
+
+String quaternionStr, environmentStr;
 
 void loop()
 {
   unsigned long currentMillis = millis();
-    mpu6050Loop();
+  mpu6050Loop();
 
-//  if( currentMillis - previousMillis >= delayInterval)
-//  {
-//    previousMillis = currentMillis;
-//    humidity = mySensor.readFloatHumidity();
-//    pressure = mySensor.readFloatPressure();
-//    altitude = mySensor.readFloatAltitudeFeet();
-//    temperature = mySensor.readTempF();
-//    uvIntensity = getUvIntensity();
-//  }
-//  //delay(50);
-//  
-//  Serial.print(humidity, 0);
-//  Serial.print(',');
-//  Serial.print(pressure, 0);
-//  Serial.print(',');
-//  Serial.print(altitude, 1);
-//  Serial.print(',');
-//  Serial.print(temperature, 1);
-//  Serial.println();
-//  Serial.print(uvIntensity);
-//  Serial.println();
+  if( currentMillis - previousMillis >= delayInterval)
+  {
+    previousMillis = currentMillis;
+    humidity = mySensor.readFloatHumidity();
+    pressure = mySensor.readFloatPressure();
+    altitude = mySensor.readFloatAltitudeFeet();
+    temperature = mySensor.readTempF();
+    uvIntensity = getUvIntensity();
+
+    #ifdef OUTPUT_READABLE_QUATERNION
+      quaternionStr = String(q.w) + ',' + String(q.x) + ',' + String(q.y) + ',' + String(q.z);
+      char quaternionChr[quaternionStr.length() + 1];
+      quaternionStr.toCharArray(quaternionChr, quaternionStr.length() + 1);
+      Serial.print(quaternionChr);
+      lora.txPacket(quaternionStr.c_str(),strlen(quaternionChr));
+      lora.enterStbyMode();
+      Serial.println();
+    #endif
+
+    environmentStr = String(humidity, 0) + ',' + String(pressure, 0) + ',' + String(altitude, 1) + ',' + String(temperature, 2);
+    char environmentChr[environmentStr.length() + 1];
+    environmentStr.toCharArray(environmentChr, environmentStr.length() + 1);
+    
+    Serial.print(environmentChr);
+    Serial.println();
+    lora.txPacket(environmentStr.c_str(),strlen(environmentChr));
+    lora.enterStbyMode();
+    Serial.print(uvIntensity);
+    Serial.println();
+  }
+  //delay(50);
 }
 
 float getUvIntensity()
